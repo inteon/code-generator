@@ -114,8 +114,6 @@ func (g *GenScheme) GenerateType(c *generator.Context, t *types.Type, w io.Write
 		}
 	}
 
-	sw.Do(globalsTemplate, m)
-
 	if g.OutputPath != "" {
 		if _, err := os.Stat(filepath.Join(g.OutputPath, strings.ToLower("register_custom.go"))); err == nil {
 			m["customRegister"] = true
@@ -131,18 +129,7 @@ func (g *GenScheme) GenerateType(c *generator.Context, t *types.Type, w io.Write
 	return sw.Error()
 }
 
-var globalsTemplate = `
-var $.Scheme$ = $.runtimeNewScheme|raw$()
-var $.Codecs$ = $.serializerNewCodecFactory|raw$($.Scheme$)
-$if .publicScheme$var $.ParameterCodec$ = $.runtimeNewParameterCodec|raw$($.Scheme$)$end -$`
-
 var registryRegistration = `
-
-func init() {
-	$.metav1AddToGroupVersion|raw$($.Scheme$, $.schemaGroupVersion|raw${Version: "v1"})
-	Install($.Scheme$)
-}
-
 // Install registers the API group and adds types to a scheme
 func Install(scheme *$.runtimeScheme|raw$) {
 	$- range .allInstallGroups$
@@ -179,9 +166,4 @@ var localSchemeBuilder = $.runtimeSchemeBuilder|raw${
 // After this, RawExtensions in Kubernetes types will serialize kube-aggregator types
 // correctly.
 var AddToScheme = localSchemeBuilder.AddToScheme
-
-func init() {
-	$.metav1AddToGroupVersion|raw$($.Scheme$, $.schemaGroupVersion|raw${Version: "v1"})
-	$.runtimeUtilMust|raw$(AddToScheme($.Scheme$))
-}
 `

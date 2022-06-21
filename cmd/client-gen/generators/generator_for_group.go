@@ -124,15 +124,7 @@ func (g *genGroup) GenerateType(c *generator.Context, t *types.Type, w io.Writer
 			sw.Do(getterImplNamespaced, wrapper)
 		}
 	}
-	sw.Do(newClientForConfigTemplate, m)
-	sw.Do(newClientForConfigAndClientTemplate, m)
-	sw.Do(newClientForConfigOrDieTemplate, m)
 	sw.Do(newClientForRESTClientTemplate, m)
-	if g.version == "" {
-		sw.Do(setInternalVersionClientDefaultsTemplate, m)
-	} else {
-		sw.Do(setClientDefaultsTemplate, m)
-	}
 	sw.Do(getRESTClient, m)
 
 	return sw.Error()
@@ -165,51 +157,6 @@ func (c *$.GroupGoName$$.Version$Client) $.type|publicPlural$() $.type|public$In
 }
 `
 
-var newClientForConfigTemplate = `
-// NewForConfig creates a new $.GroupGoName$$.Version$Client for the given config.
-// NewForConfig is equivalent to NewForConfigAndClient(c, httpClient),
-// where httpClient was generated with rest.HTTPClientFor(c).
-func NewForConfig(c *$.restConfig|raw$) (*$.GroupGoName$$.Version$Client, error) {
-	config := *c
-	if err := setConfigDefaults(&config); err != nil {
-		return nil, err
-	}
-	httpClient, err := $.RESTHTTPClientFor|raw$(&config)
-	if err != nil {
-		return nil, err
-	}
-	return NewForConfigAndClient(&config, httpClient)
-}
-`
-
-var newClientForConfigAndClientTemplate = `
-// NewForConfigAndClient creates a new $.GroupGoName$$.Version$Client for the given config and http client.
-// Note the http client provided takes precedence over the configured transport values.
-func NewForConfigAndClient(c *$.restConfig|raw$, h *http.Client) (*$.GroupGoName$$.Version$Client, error) {
-	config := *c
-	if err := setConfigDefaults(&config); err != nil {
-		return nil, err
-	}
-	client, err := $.restRESTClientForConfigAndClient|raw$(&config, h)
-	if err != nil {
-		return nil, err
-	}
-	return &$.GroupGoName$$.Version$Client{client}, nil
-}
-`
-
-var newClientForConfigOrDieTemplate = `
-// NewForConfigOrDie creates a new $.GroupGoName$$.Version$Client for the given config and
-// panics if there is an error in the config.
-func NewForConfigOrDie(c *$.restConfig|raw$) *$.GroupGoName$$.Version$Client {
-	client, err := NewForConfig(c)
-	if err != nil {
-		panic(err)
-	}
-	return client
-}
-`
-
 var getRESTClient = `
 // RESTClient returns a RESTClient that is used to communicate
 // with API server by this client implementation.
@@ -225,43 +172,5 @@ var newClientForRESTClientTemplate = `
 // New creates a new $.GroupGoName$$.Version$Client for the given RESTClient.
 func New(c $.restRESTClientInterface|raw$) *$.GroupGoName$$.Version$Client {
 	return &$.GroupGoName$$.Version$Client{c}
-}
-`
-
-var setInternalVersionClientDefaultsTemplate = `
-func setConfigDefaults(config *$.restConfig|raw$) error {
-	config.APIPath = $.apiPath$
-	if config.UserAgent == "" {
-		config.UserAgent = $.restDefaultKubernetesUserAgent|raw$()
-	}
-	if config.GroupVersion == nil || config.GroupVersion.Group != scheme.Scheme.PrioritizedVersionsForGroup("$.groupName$")[0].Group {
-		gv := scheme.Scheme.PrioritizedVersionsForGroup("$.groupName$")[0]
-		config.GroupVersion = &gv
-	}
-	config.NegotiatedSerializer = scheme.Codecs
-
-	if config.QPS == 0 {
-		config.QPS = 5
-	}
-	if config.Burst == 0 {
-		config.Burst = 10
-	}
-
-	return nil
-}
-`
-
-var setClientDefaultsTemplate = `
-func setConfigDefaults(config *$.restConfig|raw$) error {
-	gv := $.SchemeGroupVersion|raw$
-	config.GroupVersion =  &gv
-	config.APIPath = $.apiPath$
-	config.NegotiatedSerializer = scheme.Codecs.WithoutConversion()
-
-	if config.UserAgent == "" {
-		config.UserAgent = $.restDefaultKubernetesUserAgent|raw$()
-	}
-
-	return nil
 }
 `
